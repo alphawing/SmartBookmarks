@@ -87,3 +87,8 @@ ENV/
 
 # Rope project settings
 .ropeproject
+# Ignore temporary large files like classifiers and trained data
+data/
+#ignore ide list
+idea_list
+*.pyc
