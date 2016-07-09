@@ -71,11 +71,15 @@ class smart(object):
 		predictions = [str(a)]
 		for x in pred_folder:
 			predictions.append(str(x))
-		print "predicted :",predictions[0]
+		print "predicted :\n",predictions[0]
 		print "\n".join(predictions[1:])
 		print "enter option"
 		inp = int(raw_input())
-		folder = predictions[inp]
+		if inp == 5:
+			print "enter folder"
+			folder = str(raw_input())
+		else:
+			folder = predictions[inp]
 		sql = "insert into bookmarks(folder,name,url) values(?,?,?)"
 		self.db.sql(sql,(folder,name,url))
 		self.update_tree()
@@ -140,7 +144,6 @@ class smart(object):
 			if bookm.folder not in self.bmbar.keys():
 				self.bmbar[bookm.folder] = []
 			self.bmbar[bookm.folder].append(bookm)
-		print len(self.bmbar)
 
 
 	def build_tktree(self):
@@ -152,7 +155,6 @@ class smart(object):
 			id = self.tree.insert("","end",text = key,tags = "folder")
 			for bookm in self.bmbar[key]:
 				self.tree.insert(id,"end",text = bookm.name,tags = ["url",bookm.id])
-		print "time taken ",time()-self.t0
 
 
 	def create_layout(self):
@@ -179,6 +181,7 @@ class smart(object):
 		self.create_layout()
 		self.root.mainloop()
 
-		
+
 app = smart()
 app.start()
+db.con.commit()

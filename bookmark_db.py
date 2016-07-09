@@ -109,9 +109,6 @@ class database(object):
 			self.con.execute(SQL,param)
 		else:
 			self.con.execute(SQL)
-		self.con.commit()
-
-
 
 
 
