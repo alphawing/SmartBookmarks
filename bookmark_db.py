@@ -7,8 +7,6 @@ import re
 
 class database(object):
 
-	database = "./data/test.db"
-	filepath = "./data/Bookmarks"
 
 	def __init__(self,dbase,fpath):
 		self.database = dbase
@@ -111,6 +109,7 @@ class database(object):
 			self.con.execute(SQL,param)
 		else:
 			self.con.execute(SQL)
+		self.con.commit()
 
 
 

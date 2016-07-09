@@ -7,22 +7,19 @@ import string
 punct = set(string.punctuation)
 def url_features(url):
 	'''gets features from a given url's title'''
+	title = ""
 	try:
 		soup = BeautifulSoup(urllib2.urlopen(url))
 		title = soup.title.string
 	except :
-		print "url not reachable , enter title manually"
-		title = str(raw_input())
+		pass
 	a = "".join([title," ",url])
 	a = ''.join(x if x not in punct else " " for x in a)
 	a = a.lower()
-	return a
+	return (a,title)
 
-def predict(clf,vectorizer):
+def predict(a,clf,vectorizer):
 	'''predicts bookmrks based on the tags and url'''
-	print "enter url"
-	url = str(raw_input())
-	a = url_features(url)
 	tags = " ".join(a.split())
 	print "tags	:",tags
 	# vectorize input
