@@ -5,6 +5,9 @@ from time import time
 from Tkinter import *
 import ttk
 import datetime
+import os
+import  shutil
+from tkFileDialog import askopenfilename
 class bookmark(object):
 	def __init__(self,tup = None):
 		self.id = 0
@@ -181,7 +184,17 @@ class smart(object):
 		self.create_layout()
 		self.root.mainloop()
 
+def load_file():
+	if not os.path.exists("data"):
+		os.makedirs("data")
+	dest = "data/"
+	if not os.path.exists("data/Bookmarks"):
+		openfilewin = Tk()
+		bmfile = askopenfilename(parent = openfilewin,filetypes = (("Chrome bookmark file", "Bookmarks"),))
+		shutil.copy(os.path.abspath(bmfile),os.path.abspath(dest))
+		openfilewin.withdraw()
 
+load_file()
 app = smart()
 app.start()
-db.con.commit()
+app.db.con.commit()
