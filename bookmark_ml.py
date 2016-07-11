@@ -3,6 +3,7 @@ import predict_folders
 from bookmark_db import database
 from time import time
 from Tkinter import *
+import Tkinter as tk
 import ttk
 import datetime
 import os
@@ -76,31 +77,8 @@ class mainui(object):
 
 
 	def add(self):
-		print "add was pushed"
-		print "enter url"
-		url = str(raw_input())
-		(urlfeatures,name) = predict_folders.url_features(url)
-		if name == "":
-			print "url not reachable enter name manually"
-			name = str(raw_input())
-		predicted,pred_folder = predict_folders.predict(urlfeatures,self.clf,self.vectorizer)
-		a = predicted[0]
-		predictions = [str(a)]
-		for x in pred_folder:
-			predictions.append(str(x))
-		print "predicted :\n",predictions[0]
-		print "\n".join(predictions[1:])
-		print "enter option"
-		inp = int(raw_input())
-		if inp == 5:
-			print "enter folder"
-			folder = str(raw_input())
-		else:
-			folder = predictions[inp]
-		sql = "insert into bookmarks(folder,name,url) values(?,?,?)"
-		self.db.sql(sql,(folder,name,url))
+		a = add(self.db,self.clf,self.vectorizer,self)
 		self.update_tree()
-
 
 	def edit(self):
 		e = edit(self.current,self.db)
@@ -164,7 +142,6 @@ class mainui(object):
 		self.textd = display_url(self.tt)
 		bt = Frame(self.root)
 		b1 = Button(bt,text="Copy Url")
-		b2 = Button(bt,text="submit")
 		menubar = Menu(self.root)
 		menubar.add_command(label = "Add",command = self.add)
 		menubar.add_command(label = "Edit",command = self.edit)
@@ -174,7 +151,6 @@ class mainui(object):
 		#b1.configure(command = self.copyurl)
 		#b2.configure(command = self.submit)
 		b1.pack(side = LEFT,padx = 10,pady =5)
-		b2.pack(side = LEFT,padx = 10,pady =5)
 		#b3.pack(side = LEFT,padx = 10,pady =5)
 		self.build_tktree()
 		self.S = Scrollbar(self.ft, command=self.tree.yview)
@@ -357,6 +333,151 @@ class edit(object):
 		self.bookm.url = self.e3.get()
 		self.ttt.quit()
 		self.ttt.destroy()
+
+
+class add(tk.Tk):
+	def __init__(self,db,c,v,par):
+		tk.Tk.__init__(self)
+		self.db = db
+		self.c = c
+		self.v = v
+		self.url = ""
+		self.name = ""
+		self.folder = ""
+		self.predictions = []
+		self.urlfeatures = ""
+		self.u=0
+		self.n=0
+		self.f=0
+		self.container = Frame(self)
+		self.container.pack(side="top", fill="both", expand=True)
+		self.frames = {}
+		self.fortreeupd = par
+		print "showing get url"
+		frame = geturl(parent = self.container, controller = self)		
+	def show_frame(self, cll):
+		'''Show a frame for the given page name'''
+		frame = cll(parent = self.container, controller = self)
+
+
+class geturl(tk.Frame):
+	def __init__(self,parent,controller):
+		tk.Frame.__init__(self,parent)
+		self.controller = controller
+		self.get_url()
+
+
+	def get_url(self):
+		uu = StringVar(self);
+		self.l2 = Label(self,text = "Url",pady = 5,padx = 5).pack(side = LEFT)
+		self.e2 = Entry(self,textvariable = uu,width = 60)
+		self.e2.pack(side =LEFT)
+		self.b1 = Button(self,text="Submit",padx = 5,pady = 5)
+		self.b1.configure(command = self.thisfuncu)
+		self.b1.pack(side = LEFT)
+		print "get url frame created"
+		self.pack()
+		#self.tkraise()
+
+
+	def thisfuncu(self):
+		print "im in here"
+		self.controller.url = self.e2.get()
+		(self.urlfeatures,self.name) = predict_folders.url_features(self.controller.url)
+		self.controller.urlfeatures = self.urlfeatures
+		self.controller.name = self.name
+		self.b1.destroy()
+		if self.name == "":
+			#self.controller.show_frame("getname")
+			self.controller.show_frame(getname)
+		else:
+			self.controller.name = self.name
+			predicted,pred_folder = predict_folders.predict(self.controller.urlfeatures,self.controller.c,self.controller.v)
+			a = predicted[0]
+			predictions = [str(a)]
+			for x in pred_folder:
+				predictions.append(str(x))
+			self.controller.predictions =predictions
+			self.controller.show_frame(getfolder)
+
+class getname(tk.Frame):
+	def __init__(self,parent,controller):
+		tk.Frame.__init__(self,parent)
+		self.controller =controller
+		self.get_name()
+		self.par = parent
+
+	def get_name(self):
+		print "in geturl"
+		uu = StringVar(self);
+		self.l2 = Label(self,text = "Name",pady = 5,padx = 5).pack(side = LEFT)
+		self.e2 = Entry(self,textvariable = uu,width = 60)
+		self.e2.pack(side =LEFT)
+		self.b1 = Button(self,text="Submit",padx = 5,pady = 5)
+		self.b1.configure(command = self.thisfuncu)
+		self.b1.pack(side = LEFT)
+		self.pack()
+		self.tkraise()
+
+	def thisfuncu(self):
+		self.controller.name = self.e2.get()
+		predicted,pred_folder = predict_folders.predict(self.controller.urlfeatures,self.controller.c,self.controller.v)
+		a = predicted[0]
+		predictions = [str(a)]
+		for x in pred_folder:
+			predictions.append(str(x))
+		self.controller.predictions =predictions
+		self.destroy()
+		self.controller.show_frame(getfolder)
+
+
+class getfolder(tk.Frame):
+	def __init__(self,parent,controller):
+		tk.Frame.__init__(self,parent)
+		self.controller =controller
+		self.par = parent
+		self.predictions = self.controller.predictions
+		self.get_folder()
+
+	def get_folder(self):
+		ff = StringVar(self);
+		nn = StringVar(self);
+		self.l1 = Label(self,text = "Name",pady = 5,padx = 5).pack(side = LEFT)
+		self.e1 = Entry(self,textvariable = nn,width = 60)
+		self.e1.pack(side =LEFT)
+		self.e1.insert("0",self.controller.name)
+		l2 = Label(self,text = "Folder",pady = 5,padx = 5).pack(side = LEFT)
+		self.e2 = Entry(self,textvariable = ff,width = 30)
+		self.e2.pack(side =LEFT)
+		f = Frame(self.controller)
+		self.Lb1 = Listbox(f)
+		self.Lb1.insert(0, self.predictions[0])
+		self.Lb1.insert(1,self.predictions[1])
+		self.Lb1.insert(2, self.predictions[2])
+		self.Lb1.insert(3, self.predictions[3])
+		self.Lb1.insert(4, self.predictions[4])
+		self.Lb1.pack(side = LEFT)
+		self.Lb1.bind('<<ListboxSelect>>', self.listselect)
+		b1 = Button(f,text="Submit",padx = 5,pady = 5)
+		b1.configure(command = self.thisfuncf)
+		b1.pack(side = LEFT)
+		f.pack()
+		self.pack()
+		self.tkraise()
+	def listselect(self,event):
+		index = self.Lb1.curselection()[0]
+		value = self.Lb1.get(index)
+		self.e2.delete(0, 'end')
+		self.e2.insert(0, value)
+
+	def thisfuncf(self):
+		self.folder = self.e2.get()
+		sql = "insert into bookmarks(folder,name,url) values(?,?,?)"
+		self.controller.db.sql(sql,(self.folder,self.controller.name,self.controller.url))
+		self.controller.db.con.commit()
+		self.controller.fortreeupd.update_tree()
+		self.controller.destroy()
+
 
 
 load_file()
