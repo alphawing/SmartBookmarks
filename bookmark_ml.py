@@ -10,6 +10,7 @@ import os
 import  shutil
 from tkFileDialog import askopenfilename
 import tkMessageBox
+import webbrowser
 
 def load_file():
 	if not os.path.exists("data"):
@@ -51,6 +52,7 @@ class mainui(object):
 	def __init__(self):
 		self.dpath = "./data/test.db"
 		self.fpath = "./data/Bookmarks"
+		self.currurl = ""
 		self.db = database(self.dpath,self.fpath)
 		self.t0 = time()
 		self.db.get_features()
@@ -62,6 +64,7 @@ class mainui(object):
 	    curItem = self.tree.focus()
 	    if self.tree.item(curItem)['tags'][0] == "url":
 	    	id =  self.tree.item(curItem)['tags'][1]
+	    	self.openinbrowser()
 
 	def selecteditem(self,a):
 	    curItem = self.tree.focus()
@@ -69,7 +72,8 @@ class mainui(object):
 	    	self.current = (1,self.tree.item(curItem)['tags'][1])
 	    	sql = "select * from bookmarks where id = ?"
 	    	bookm = bookmark(self.db.sqlselect(sql,(self.current[1],))[0])
-	    	self.textd.show(bookm.url)	    	
+	    	self.textd.show(bookm.url)	
+	    	self.currurl = bookm.url    	
 	    else:
 	    	self.current = (0,self.tree.item(curItem)['text'])
 	    #print self.current
@@ -136,12 +140,14 @@ class mainui(object):
 
 	def create_layout(self):
 		self.root = Tk()
+		self.root.title("Smart Bookmarks")
 		self.root.geometry("1020x550+50+50")
 		self.ft = Frame(self.root)
 		self.tt = Frame(self.root)
 		self.textd = display_url(self.tt)
 		bt = Frame(self.root)
-		b1 = Button(bt,text="Copy Url")
+		b1 = Button(bt,text="Copy Url",command = self.toclipboard)
+		b2 = Button(bt,text="Browse",command = self.openinbrowser)
 		menubar = Menu(self.root)
 		menubar.add_command(label = "Add",command = self.add)
 		menubar.add_command(label = "Edit",command = self.edit)
@@ -151,6 +157,7 @@ class mainui(object):
 		#b1.configure(command = self.copyurl)
 		#b2.configure(command = self.submit)
 		b1.pack(side = LEFT,padx = 10,pady =5)
+		b2.pack(side = LEFT,padx = 10,pady =5)
 		#b3.pack(side = LEFT,padx = 10,pady =5)
 		self.build_tktree()
 		self.S = Scrollbar(self.ft, command=self.tree.yview)
@@ -161,6 +168,18 @@ class mainui(object):
 		self.tt.pack()
 		bt.pack()
 
+	def toclipboard(self):
+		root = Tk()
+		root.withdraw()
+		root.clipboard_clear()
+		root.clipboard_append(self.currurl)
+		root.destroy()
+	def openinbrowser(self):
+		try:
+			webbrowser.open_new_tab(self.currurl)
+		except:
+			print "error opening default browser"
+
 
 	def start(self):
 		self.create_layout()
@@ -170,11 +189,13 @@ class search(object):
 	def __init__(self,db):
 		self.db = db
 		self.swindow = Tk()
+		self.swindow.wm_title("Search Bookmarks")
+		self.swindow.geometry("1020x550+100+100")
 		self.st = Frame(self.swindow)
 		ff = StringVar();
 		self.e2 = Entry(self.st,textvariable = ff,width = 30)
 		self.e2.pack(side =LEFT)
-		b1 = Button(self.st,text="Search",padx = 5,pady = 5)
+		b1 = Button(self.st,text="Search",padx = 8,pady = 7)
 		b1.configure(command = self.dosearch)
 		b1.pack(side = LEFT)
 		self.st.pack()
@@ -186,8 +207,8 @@ class search(object):
 		tt = Frame(self.swindow)
 		self.textd = display_url(tt)
 		self.searchnow(text)
-		bt = Frame(self.swindow,padx = 5,pady = 5)
-		b1 = Button(bt,text="Close",padx = 5,pady = 5)
+		bt = Frame(self.swindow,padx = 8,pady = 7)
+		b1 = Button(bt,text="Close",padx = 8,pady = 7)
 		b1.configure(command = self.swindow.destroy,)
 		b1.pack(side = LEFT)
 		self.ft.pack()
@@ -257,10 +278,10 @@ class display_url(object):
 		self.nn = StringVar();
 		self.uu = StringVar();
 		self.tt =tt
-		#l1 = Label(tt,text = "Name",pady = 5,padx = 5).pack(side = LEFT)
+		#l1 = Label(tt,text = "Name",pady = 7,padx = 8).pack(side = LEFT)
 		#self.e1 = Entry(tt,textvariable = self.nn,width = 30)
 		#self.e1.pack(side =LEFT)
-		l2 = Label(tt,text = "Url",pady = 5,padx = 5).pack(side = LEFT)
+		l2 = Label(tt,text = "Url",pady = 7,padx = 8).pack(side = LEFT)
 		self.e2 = Entry(tt,textvariable = self.uu,width = 60)
 		self.e2.pack(side =LEFT)
 	def show(self,url):
@@ -271,8 +292,10 @@ class display_url(object):
 class edit(object):
 	def __init__(self,current,db):
 		self.current = current
-		#self.newval = ""
+		self.newval = ""
 		self.ttt = Tk()
+		self.ttt.wm_title("Edit Bookmarks")
+		self.ttt.geometry("+90+90")
 		self.a =1
 		if self.current[0]==0:
 			#folder
@@ -294,32 +317,32 @@ class edit(object):
 		nn = StringVar();
 		ff = StringVar();
 		uu = StringVar();
-		l1 = Label(self.ttt,text = "Name",pady = 5,padx = 5).pack(side = LEFT)
+		l1 = Label(self.ttt,text = "Name",pady = 7,padx = 8).grid(row = 0,column = 0,sticky = W)
 		self.e1 = Entry(self.ttt,textvariable = nn,width = 30)
 		self.e1.insert(0, bookm.name)
-		self.e1.pack(side =LEFT)
-		l2 = Label(self.ttt,text = "Folder",pady = 5,padx = 5).pack(side = LEFT)
+		self.e1.grid(row = 0,column = 1,sticky = W)
+		l2 = Label(self.ttt,text = "Folder",pady = 7,padx = 8).grid(row = 1,column = 0,sticky = W)
 		self.e2 = Entry(self.ttt,textvariable = ff,width = 30)
 		self.e2.insert(0, bookm.folder)
-		self.e2.pack(side =LEFT)
-		l3 = Label(self.ttt,text = "Url",pady = 5,padx = 5).pack(side = LEFT)
+		self.e2.grid(row = 1,column = 1,sticky = W)
+		l3 = Label(self.ttt,text = "Url",pady = 7,padx = 8).grid(row = 2,column = 0)
 		self.e3 = Entry(self.ttt,textvariable = uu,width = 60)
 		self.e3.insert(0, bookm.url)
-		self.e3.pack()
-		b1 = Button(self.ttt,text="Submit",padx = 5,pady = 5)
+		self.e3.grid(row = 2,column = 1)
+		b1 = Button(self.ttt,text="Submit",padx = 8,pady = 7)
 		b1.configure(command = self.thisfuncb)
-		b1.pack(side = BOTTOM)
+		b1.grid(row = 3,column = 1)
 		self.ttt.mainloop()
 
 	def get_folder(self,ttt):
 		self.ttt = ttt
 		ff = StringVar();
-		l2 = Label(self.ttt,text = "Folder",pady = 5,padx = 5).pack(side = LEFT)
+		l2 = Label(self.ttt,text = "Folder",pady = 7,padx = 8).grid(row = 0,column = 0)
 		self.e2 = Entry(self.ttt,textvariable = ff,width = 30)
-		self.e2.pack(side =LEFT)
-		b1 = Button(self.ttt,text="Submit",padx = 5,pady = 5)
+		self.e2.grid(row = 0,column = 1)
+		b1 = Button(self.ttt,text="Submit",padx = 8,pady = 7)
 		b1.configure(command = self.thisfuncf)
-		b1.pack(side = LEFT)
+		b1.grid(row = 1,column = 1)
 		self.ttt.mainloop()
 	
 
@@ -338,6 +361,8 @@ class edit(object):
 class add(tk.Tk):
 	def __init__(self,db,c,v,par):
 		tk.Tk.__init__(self)
+		self.title("Smart Add Using Machine Learning")
+		self.geometry("+60+90")
 		self.db = db
 		self.c = c
 		self.v = v
@@ -369,12 +394,14 @@ class geturl(tk.Frame):
 
 	def get_url(self):
 		uu = StringVar(self);
-		self.l2 = Label(self,text = "Url",pady = 5,padx = 5).pack(side = LEFT)
+		self.l2 = Label(self,text = "Url",pady = 7,padx = 8).grid(row = 0,column = 0)
 		self.e2 = Entry(self,textvariable = uu,width = 60)
-		self.e2.pack(side =LEFT)
-		self.b1 = Button(self,text="Submit",padx = 5,pady = 5)
+		self.e2.grid(row = 0,column = 1)
+		self.b1 = Button(self,text="Submit",padx = 8,pady = 7)
 		self.b1.configure(command = self.thisfuncu)
-		self.b1.pack(side = LEFT)
+		self.b1.grid(row = 0,column = 2)
+		self.l3 = Label(self,text = "Press Submit to retreive webpage title from the web.",pady = 7,padx = 8,justify = LEFT)
+		self.l3.grid(row = 1,column = 0,columnspan = 3)
 		print "get url frame created"
 		self.pack()
 		#self.tkraise()
@@ -387,6 +414,7 @@ class geturl(tk.Frame):
 		self.controller.urlfeatures = self.urlfeatures
 		self.controller.name = self.name
 		self.b1.destroy()
+		self.l3.destroy()
 		if self.name == "":
 			#self.controller.show_frame("getname")
 			self.controller.show_frame(getname)
@@ -410,12 +438,12 @@ class getname(tk.Frame):
 	def get_name(self):
 		print "in geturl"
 		uu = StringVar(self);
-		self.l2 = Label(self,text = "Name",pady = 5,padx = 5).pack(side = LEFT)
+		self.l2 = Label(self,text = "Name",pady = 7,padx = 8).grid(row = 0,column = 0)
 		self.e2 = Entry(self,textvariable = uu,width = 60)
-		self.e2.pack(side =LEFT)
-		self.b1 = Button(self,text="Submit",padx = 5,pady = 5)
+		self.e2.grid(row = 0,column = 1)
+		self.b1 = Button(self,text="Submit",padx = 8,pady = 7)
 		self.b1.configure(command = self.thisfuncu)
-		self.b1.pack(side = LEFT)
+		self.b1.grid(row = 0,column = 2)
 		self.pack()
 		self.tkraise()
 
@@ -442,26 +470,27 @@ class getfolder(tk.Frame):
 	def get_folder(self):
 		ff = StringVar(self);
 		nn = StringVar(self);
-		self.l1 = Label(self,text = "Name",pady = 5,padx = 5).pack(side = LEFT)
-		self.e1 = Entry(self,textvariable = nn,width = 60)
-		self.e1.pack(side =LEFT)
+		self.l1 = Label(self,text = "Name",pady = 7,padx = 8).grid(row = 1,column = 0,sticky =W)
+		self.e1 = Entry(self,textvariable = nn,width = 25)
+		self.e1.grid(row = 1,column = 0,sticky =E)
 		self.e1.insert("0",self.controller.name)
-		l2 = Label(self,text = "Folder",pady = 5,padx = 5).pack(side = LEFT)
-		self.e2 = Entry(self,textvariable = ff,width = 30)
-		self.e2.pack(side =LEFT)
-		f = Frame(self.controller)
-		self.Lb1 = Listbox(f)
+		l2 = Label(self,text = "Folder",pady = 7,padx = 8).grid(row = 2,column = 0,sticky =W)
+		self.e2 = Entry(self,textvariable = ff,width = 25)
+		self.e2.insert("0",self.predictions[0])
+		self.e2.grid(row = 2,column = 0,sticky =E)
+		self.Lb1 = Listbox(self)
 		self.Lb1.insert(0, self.predictions[0])
 		self.Lb1.insert(1,self.predictions[1])
 		self.Lb1.insert(2, self.predictions[2])
 		self.Lb1.insert(3, self.predictions[3])
 		self.Lb1.insert(4, self.predictions[4])
-		self.Lb1.pack(side = LEFT)
+		self.Lb1.grid(row = 2,column = 1,sticky = E+S,rowspan = 2)
 		self.Lb1.bind('<<ListboxSelect>>', self.listselect)
-		b1 = Button(f,text="Submit",padx = 5,pady = 5)
+		l3 = Label(self,text = "Predicting folders using machine learning.\nThe Url and title (name) of the existing bookmarks are used to train a classifier according to which the new bookmarks are assigned a folder.The predictions are sorted in accordance to relevance.\nYou can select any predicted folder or write the folder name yourself !",pady = 7,padx = 8,wraplength = 275,justify = LEFT)
+		l3.grid(row = 3,column = 0,sticky =W)
+		b1 = Button(self,text="Submit",padx = 8,pady = 7)
 		b1.configure(command = self.thisfuncf)
-		b1.pack(side = LEFT)
-		f.pack()
+		b1.grid(row = 4,columnspan =1)
 		self.pack()
 		self.tkraise()
 	def listselect(self,event):
