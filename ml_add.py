@@ -2,6 +2,7 @@ from Tkinter import *
 import Tkinter as tk
 import ttk
 import predict_folders
+import tkMessageBox
 
 class add(tk.Tk):
 	def __init__(self,db,c,v,par):
@@ -23,7 +24,7 @@ class add(tk.Tk):
 		self.container.pack(side="top", fill="both", expand=True)
 		self.frames = {}
 		self.fortreeupd = par
-		print "showing get url"
+		#print "showing get url"
 		frame = geturl(parent = self.container, controller = self)		
 	def show_frame(self, cll):
 		'''Show a frame for the given page name'''
@@ -47,13 +48,13 @@ class geturl(tk.Frame):
 		self.b1.grid(row = 0,column = 2)
 		self.l3 = Label(self,text = "Press Submit to retreive webpage title from the web.",pady = 7,padx = 8,justify = LEFT)
 		self.l3.grid(row = 1,column = 0,columnspan = 3)
-		print "get url frame created"
+		#print "get url frame created"
 		self.pack()
 		#self.tkraise()
 
 
 	def thisfuncu(self):
-		print "im in here"
+		#print "im in here"
 		self.controller.url = self.e2.get()
 		(self.urlfeatures,self.name) = predict_folders.url_features(self.controller.url)
 		self.controller.urlfeatures = self.urlfeatures
@@ -81,19 +82,23 @@ class getname(tk.Frame):
 		self.par = parent
 
 	def get_name(self):
-		print "in geturl"
+		#print "in geturl"
 		uu = StringVar(self);
-		self.l2 = Label(self,text = "Name",pady = 7,padx = 8).grid(row = 0,column = 0)
+		
+		self.l1 = Label(self,text = "Unable to reach url , enter name manually",pady = 7,padx = 8).grid(row = 0,column = 0,columnspan = 2,sticky = W+E)
+		self.l2 = Label(self,text = "Name",pady = 7,padx = 8).grid(row = 1,column = 0,sticky = W)
 		self.e2 = Entry(self,textvariable = uu,width = 60)
-		self.e2.grid(row = 0,column = 1)
+		self.e2.grid(row = 1,column = 1)
 		self.b1 = Button(self,text="Submit",padx = 8,pady = 7)
 		self.b1.configure(command = self.thisfuncu)
-		self.b1.grid(row = 0,column = 2)
+		self.b1.grid(row = 1,column = 2)
 		self.pack()
 		self.tkraise()
 
 	def thisfuncu(self):
 		self.controller.name = self.e2.get()
+		normalised_name = predict_folders.process_name(self.controller.name)
+		self.controller.urlfeatures = "".join([normalised_name," ",self.controller.urlfeatures])
 		predicted,pred_folder = predict_folders.predict(self.controller.urlfeatures,self.controller.c,self.controller.v)
 		a = predicted[0]
 		predictions = [str(a)]
@@ -131,7 +136,7 @@ class getfolder(tk.Frame):
 		self.Lb1.insert(4, self.predictions[4])
 		self.Lb1.grid(row = 2,column = 1,sticky = E+S,rowspan = 2)
 		self.Lb1.bind('<<ListboxSelect>>', self.listselect)
-		l3 = Label(self,text = "Predicting folders using machine learning.\nThe Url and title (name) of the existing bookmarks are used to train a classifier according to which the new bookmarks are assigned a folder.The predictions are sorted in accordance to relevance.\nYou can select any predicted folder or write the folder name yourself !",pady = 7,padx = 8,wraplength = 275,justify = LEFT)
+		l3 = Label(self,text = "The list on the right containes folders predicted using machine learning.\nThe Url and title (name) of the existing bookmarks are used to train a classifier according to which the new bookmarks are assigned a folder.The predictions are sorted in accordance to relevance.\nYou can select any predicted folder or write the folder name yourself !",pady = 7,padx = 8,wraplength = 275,justify = LEFT)
 		l3.grid(row = 3,column = 0,sticky =W)
 		b1 = Button(self,text="Submit",padx = 8,pady = 7)
 		b1.configure(command = self.thisfuncf)

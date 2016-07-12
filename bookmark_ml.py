@@ -22,11 +22,10 @@ def load_file():
 	dest = "data/"
 	if not os.path.exists("data/Bookmarks"):
 		openfilewin = Tk()
+		openfilewin.withdraw()
 		bmfile = askopenfilename(parent = openfilewin,filetypes = (("Chrome bookmark file", "Bookmarks"),))
 		shutil.copy(os.path.abspath(bmfile),os.path.abspath(dest))
-		openfilewin.withdraw()
-
-c
+		openfilewin.destroy()
 
 
 class mainui(object):

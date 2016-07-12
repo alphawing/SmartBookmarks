@@ -17,11 +17,15 @@ def url_features(url):
 	a = ''.join(x if x not in punct else " " for x in a)
 	a = a.lower()
 	return (a,title)
+def process_name(a):
+	a = ''.join(x if x not in punct else " " for x in a)
+	a = a.lower()
+	return a
 
 def predict(a,clf,vectorizer):
 	'''predicts bookmrks based on the tags and url'''
 	tags = " ".join(a.split())
-	print "tags	:",tags
+	#print "tags	:",tags
 	# vectorize input
 	x = vectorizer.transform(np.array([a]))
 	# get predicted probabilities
