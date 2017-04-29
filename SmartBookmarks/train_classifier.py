@@ -20,4 +20,5 @@ def train():
 	#pickle.dump(clf,f)
 	#f = open("./data/vectorizer.pkl","wb")
 	#pickle.dump(vectorizer,f)
+        print "Training error : " , Training_error
 	return (clf,vectorizer,Training_error)
