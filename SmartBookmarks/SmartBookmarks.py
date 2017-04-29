@@ -1,31 +1,36 @@
-import train_classifier 
-import predict_folders
-from bookmark_db import database
 from time import time
-from Tkinter import *
-import Tkinter as tk
-import ttk
 import datetime
 import os
 import  shutil
+import webbrowser
+import argparse
+import ttk
+from Tkinter import *
+import Tkinter as tk
 from tkFileDialog import askopenfilename
 import tkMessageBox
-import webbrowser
+import train_classifier 
+import predict_folders
+from bookmark_db import database
 from ml_add import add
 from bmedit import edit
 from bmsearch import *
 
 
-def load_file():
+def load_file(custom_path):
 	if not os.path.exists("data"):
 		os.makedirs("data")
 	dest = "data/"
+	filepath = os.path.expanduser("~/.config/google-chrome/Default/Bookmarks")
 	if not os.path.exists("data/Bookmarks"):
-		openfilewin = Tk()
-		openfilewin.withdraw()
-		bmfile = askopenfilename(parent = openfilewin,filetypes = (("Chrome bookmark file", "Bookmarks"),))
-		shutil.copy(os.path.abspath(bmfile),os.path.abspath(dest))
-		openfilewin.destroy()
+		if custom_path == 1:
+			openfilewin = Tk()
+			openfilewin.withdraw()
+			bmfile = askopenfilename(parent = openfilewin,filetypes = (("Chrome bookmark file", "Bookmarks"),))
+			shutil.copy(os.path.abspath(bmfile),os.path.abspath(dest))
+			openfilewin.destroy()
+		else:
+			shutil.copy(filepath,os.path.abspath(dest))
 
 
 class mainui(object):
@@ -115,7 +120,7 @@ class mainui(object):
 		for key in sorted(self.bmbar.keys()):
 			id = self.tree.insert("","end",text = key,tags = "folder")
 			for bookm in self.bmbar[key]:
-				self.tree.insert(id,"end",text = bookm.name,tags = ["url",bookm.id])
+				self.tree.insert(id,"end",text = "".join([ch for ch in bookm.name if ord(ch)<= 128]),tags = ["url",bookm.id])
 
 
 	def create_layout(self):
@@ -173,10 +178,11 @@ class mainui(object):
 
 
 
-
-
-
-load_file()
+parser = argparse.ArgumentParser(description='Smart Bookmarks.')
+parser.add_argument('--custom-file', dest='custom', action='store_const',const=1, default=0,help='chose a custom chrome bookmarks file')
+#args = sys.argsgv[1:]
+args = parser.parse_args()
+load_file(args.custom)
 app = mainui()
 app.start()
 app.db.con.commit()
